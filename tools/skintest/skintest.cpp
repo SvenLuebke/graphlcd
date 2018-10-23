@@ -14,7 +14,7 @@
 #include <glcdskin/parser.h>
 #include <glcdskin/skin.h>
 #include <glcdskin/config.h>
-#include <glcdskin/string.h>
+#include <glcdskin/string_lcd.h>
 
 class cMySkinConfig : public GLCD::cSkinConfig
 {

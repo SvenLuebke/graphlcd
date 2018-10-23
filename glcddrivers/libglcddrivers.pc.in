@@ -3,8 +3,8 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: glcdgraphics
-Description: Library of glcdgraphics
+Name: glcddrivers
+Description: Library of glcddrivers
 Version: @VERSION@
-Libs: -L${libdir} -llibglcdgraphics
-Cflags: -I${includedir}/glcdgraphics
+Libs: -L${libdir} -lglcddrivers
+Cflags: -I${includedir}/glcddrivers

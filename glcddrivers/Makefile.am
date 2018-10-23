@@ -1,18 +1,10 @@
 lib_LTLIBRARIES = libglcddrivers.la
+libglcddrivers_la_SOURCES = common.cpp config.cpp driver.cpp drivers.cpp port.cpp simlcd.cpp framebuffer.cpp \
+                            gu140x32f.cpp gu256x64-372.cpp gu256x64-3900.cpp hd61830.cpp ks0108.cpp image.cpp sed1330.cpp sed1520.cpp \
+                            t6963c.cpp noritake800.cpp serdisp.cpp avrctl.cpp g15daemon.cpp network.cpp gu126x64D-K610A4.cpp \
+                            dm140gink.cpp usbserlcd.cpp st7565r-reel.cpp
+libglcddrivers_la_LDFLAGS = -version-info @GLCDDRIVERS_MAJOR_VERSION@:@GLCDDRIVERS_MINOR_VERSION@:@GLCDDRIVERS_MICRO_VERSION@  -lpthread
 
-
-AM_CPPFLAGS = -I$(srcdir)/include
-
-libglcddrivers_la_SOURCES =  \
-     port.c \
-     noritake800.c picoLCD_256x64.c sed1330.c \
-     usbserlcd.c
-
-AM_CFLAGS = -Wall -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
-AM_CXXFLAGS = -Wall
-
-pkgincludedir = ${includedir}/eplayer2
-pkginclude_HEADERS = \
-           $(srcdir)/include/*.h
+pkgincludedir = ${includedir}/glcddrivers
 pkgconfigdir = ${libdir}/pkgconfig
-pkgconfig_DATA = libglcdgraphics.pc
+pkgconfig_DATA = libglcddrivers.pc

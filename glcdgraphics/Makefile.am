@@ -1,16 +1,13 @@
+AM_CXXFLAGS = -I$(top_srcdir) @MY_LIBFREETYPE2_CPPFLAGS@ @libfreetype2_CFLAGS@ @imagemagick_CFLAGS@ @MY_IMAGEMAGICK_CPPFLAGS@
+
 lib_LTLIBRARIES = libglcdgraphics.la
+libglcdgraphics_la_SOURCES = bitmap.cpp common.cpp extformats.cpp font.cpp glcd.cpp \
+                             image.cpp imagefile.cpp pbm.cpp
+                             
+libglcdgraphics_la_LDFLAGS = -version-info @GLCDGRAPHICS_MAJOR_VERSION@:@GLCDGRAPHICS_MINOR_VERSION@:@GLCDGRAPHICS_MICRO_VERSION@
+libglcdgraphics_la_LIBADD = -ldl @libfreetype2_LIBS@ @imagemagick_LIBS@
 
-
-AM_CPPFLAGS = -I$(srcdir)/include
-
-libglcdgraphics_la_SOURCES =  \
-     font.c glcd.c common.c bitmap.c
-
-AM_CFLAGS = -Wall -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
-AM_CXXFLAGS = -Wall
-
-pkgincludedir = ${includedir}/eplayer2
-pkginclude_HEADERS = \
-           $(srcdir)/include/*.h
+pkgincludedir = ${includedir}/glcdgraphics
+pkginclude_HEADERS = $(srcdir)/*.h
 pkgconfigdir = ${libdir}/pkgconfig
 pkgconfig_DATA = libglcdgraphics.pc

@@ -22,7 +22,7 @@
 #include <glcdgraphics/bitmap.h>
 
 #include "type.h"
-#include "string.h"
+#include "string_lcd.h"
 
 #include <glcddrivers/driver.h>
 

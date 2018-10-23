@@ -14,7 +14,7 @@
 
 #include "skin.h"
 #include "object.h"
-#include "string.h"
+#include "string_lcd.h"
 
 namespace GLCD
 {

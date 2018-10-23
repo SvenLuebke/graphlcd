@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: glcdskin
+Description: Library of glcdskin
+Version: @VERSION@
+Libs: -L${libdir} -lglcdskin
+Cflags: -I${includedir}/glcdskin
