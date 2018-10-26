@@ -7,4 +7,4 @@ Name: glcddrivers
 Description: Library of glcddrivers
 Version: @VERSION@
 Libs: -L${libdir} -lglcddrivers
-Cflags: -I${includedir}/glcddrivers
+Cflags: -I${includedir}

@@ -5,6 +5,8 @@ libglcddrivers_la_SOURCES = common.cpp config.cpp driver.cpp drivers.cpp port.cp
                             dm140gink.cpp usbserlcd.cpp st7565r-reel.cpp
 libglcddrivers_la_LDFLAGS = -version-info @GLCDDRIVERS_MAJOR_VERSION@:@GLCDDRIVERS_MINOR_VERSION@:@GLCDDRIVERS_MICRO_VERSION@  -lpthread
 
+
 pkgincludedir = ${includedir}/glcddrivers
+pkginclude_HEADERS = $(srcdir)/config.h $(srcdir)/driver.h $(srcdir)/drivers.h
 pkgconfigdir = ${libdir}/pkgconfig
 pkgconfig_DATA = libglcddrivers.pc

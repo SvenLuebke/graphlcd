@@ -8,6 +8,8 @@ libglcdgraphics_la_LDFLAGS = -version-info @GLCDGRAPHICS_MAJOR_VERSION@:@GLCDGRA
 libglcdgraphics_la_LIBADD = -ldl @libfreetype2_LIBS@ @imagemagick_LIBS@
 
 pkgincludedir = ${includedir}/glcdgraphics
-pkginclude_HEADERS = $(srcdir)/*.h
+pkginclude_HEADERS = $(srcdir)/bitmap.h $(srcdir)/font.h $(srcdir)/glcd.h $(srcdir)/image.h \
+                     $(srcdir)/imagefile.h $(srcdir)/pbm.h $(srcdir)/extformats.h
+                     
 pkgconfigdir = ${libdir}/pkgconfig
 pkgconfig_DATA = libglcdgraphics.pc

@@ -7,4 +7,4 @@ Name: glcdskin
 Description: Library of glcdskin
 Version: @VERSION@
 Libs: -L${libdir} -lglcdskin
-Cflags: -I${includedir}/glcdskin
+Cflags: -I${includedir}

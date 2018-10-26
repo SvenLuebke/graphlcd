@@ -7,4 +7,4 @@ Name: glcdgraphics
 Description: Library of glcdgraphics
 Version: @VERSION@
 Libs: -L${libdir} -lglcdgraphics
-Cflags: -I${includedir}/glcdgraphics
+Cflags: -I${includedir}
