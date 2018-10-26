@@ -1,5 +1,5 @@
 
-SUBDIRS = crtfont showpic showtext lcdtestpattern skintest genfont
+SUBDIRS = convpic crtfont showpic showtext lcdtestpattern skintest genfont
 
 
 #EXTRA_DIST =
