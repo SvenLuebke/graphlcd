@@ -5,6 +5,7 @@ libglcddrivers_la_SOURCES = common.cpp config.cpp driver.cpp drivers.cpp port.cp
                             gu140x32f.cpp gu256x64-372.cpp gu256x64-3900.cpp hd61830.cpp ks0108.cpp image.cpp sed1330.cpp sed1520.cpp \
                             t6963c.cpp noritake800.cpp serdisp.cpp avrctl.cpp g15daemon.cpp network.cpp gu126x64D-K610A4.cpp \
                             dm140gink.cpp usbserlcd.cpp st7565r-reel.cpp
+
 if HAVE_DRIVER_AX206DPF
 libglcddrivers_la_SOURCES += ax206dpf.cpp
 endif
@@ -19,7 +20,7 @@ libglcddrivers_la_SOURCES += ssd1306.cpp
 endif
 if HAVE_DRIVER_SSD1322FTDI
 libglcddrivers_la_SOURCES += ssd1322ftdi.cpp
-AM_CXXFLAGS += @libftdi_CFLAGS@ 
+AM_CXXFLAGS += @libftdi1_CFLAGS@ 
 endif
 if HAVE_DRIVER_VNCSERVER
 libglcddrivers_la_SOURCES += vncserver.cpp

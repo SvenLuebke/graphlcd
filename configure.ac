@@ -120,7 +120,7 @@ AC_ARG_ENABLE([driver-ssd1322ftdi],
  	AS_HELP_STRING(--disable-driver-ssd1322ftdi,disable driver ssd1322ftdi),
  	[case "${enableval}" in yes | "") am_driver_ssd1322ftdi=yes ;; no) am_driver_ssd1322ftdi=no ;; *) am_driver_ssd1322ftdi=yes ;; esac], [am_driver_ssd1322ftdi=yes])
   if test "$am_driver_ssd1322ftdi" = "yes"; then
-    PKG_CHECK_MODULES([libftdi], [libftdi], [HAVE_LIBFTDI=1])
+    PKG_CHECK_MODULES([libftdi1], [libftdi1], [HAVE_LIBFTDI=1])
     AM_CONDITIONAL([HAVE_DRIVER_SSD1322FTDI], test "$am_driver_ssd1322ftdi" = "yes")
   fi
 
