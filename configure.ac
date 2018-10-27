@@ -1,11 +1,14 @@
 AC_INIT(graphlcd-base,0.0.1,,graphlcd-base)
-AM_INIT_AUTOMAKE([foreign dist-xz])
-LT_INIT
+AM_INIT_AUTOMAKE([1.12 gnits dist-bzip2 no-dist-gzip -Wall no-define])
+
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIRS([m4])
 
-AC_PROG_CC
+AM_PROG_AR
 AC_PROG_CXX
 PKG_PROG_PKG_CONFIG
+
+LT_INIT([disable-static])
 
 m4_define([libglcddrivers_major_version], [2])
 GLCDDRIVERS_MAJOR_VERSION=libglcddrivers_major_version
@@ -60,7 +63,6 @@ AC_ARG_ENABLE([freetype2],
 		AS_IF([test "$HAVE_FREETYPE2" = 1], [AC_SUBST(MY_LIBFREETYPE2_CPPFLAGS,-DHAVE_FREETYPE2)])
 	fi
 
-dnl ****** NOT Ready yet...this can be done with pkg-config **********
 AC_SUBST(MY_IMAGEMAGICK_CPPFLAGS,[])
 AC_SUBST(imagemagick_CFLAGS,[])
 AC_SUBST(imagemagick_LIBS,[])
@@ -92,9 +94,9 @@ AC_ARG_ENABLE([driver_vncserver],
  	[case "${enableval}" in yes | "") am_driver_vncserver=yes ;; no) am_driver_vncserver=no ;; *) am_driver_vncserver=yes ;; esac], [am_driver_vncserver=yes])
   if test "$am_driver_vncserver" = "yes"; then
     PKG_CHECK_MODULES([libvncserver], [libvncserver], [HAVE_LIBVNCSERVER=1])
-    AS_IF([test "$HAVE_LIBVNCSERVER" = 1], [AM_CONDITIONAL([HAVE_DRIVER_VNCSERVER], test "$am_driver_vncserver" = "yes")
-                                            AC_SUBST(MY_VNCSERVER_CPPFLAGS,-DHAVE_VNCSERVER)])  
+    AS_IF([test "$HAVE_LIBVNCSERVER" = 1], [AC_SUBST(MY_VNCSERVER_CPPFLAGS,-DHAVE_VNCSERVER)])
   fi
+  AM_CONDITIONAL([HAVE_DRIVER_VNCSERVER], test "$am_driver_vncserver" = "yes")
 	
 AC_ARG_ENABLE([driver-ax206dpf],
  	AS_HELP_STRING(--disable-driver-ax206dpf,disable driver ax206dpf),
@@ -121,15 +123,14 @@ AC_ARG_ENABLE([driver-ssd1322ftdi],
  	[case "${enableval}" in yes | "") am_driver_ssd1322ftdi=yes ;; no) am_driver_ssd1322ftdi=no ;; *) am_driver_ssd1322ftdi=yes ;; esac], [am_driver_ssd1322ftdi=yes])
   if test "$am_driver_ssd1322ftdi" = "yes"; then
     PKG_CHECK_MODULES([libftdi1], [libftdi1], [HAVE_LIBFTDI=1])
-    AM_CONDITIONAL([HAVE_DRIVER_SSD1322FTDI], test "$am_driver_ssd1322ftdi" = "yes")
   fi
+  AM_CONDITIONAL([HAVE_DRIVER_SSD1322FTDI], test "$am_driver_ssd1322ftdi" = "yes")
 
 CXXFLAGS="$CXXFLAGS -Wall -Woverloaded-virtual -fPIC -D_GNU_SOURCE"
 dnl CXXFLAGS="$CXXFLAGS -MMD"
 
-AC_CONFIG_HEADERS([config.h:config.hin])
 
-AC_CONFIG_FILES([
+AC_OUTPUT([
 Makefile \
 glcdgraphics/Makefile \
 glcdgraphics/libglcdgraphics.pc \
@@ -146,5 +147,5 @@ tools/showpic/Makefile \
 tools/showtext/Makefile \
 tools/skintest/Makefile \
 ])
-AC_OUTPUT
+
 
