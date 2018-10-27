@@ -91,8 +91,10 @@ AC_ARG_ENABLE([driver_vncserver],
  	AS_HELP_STRING(--disable-driver-vncserver,disable usage of vncserver),
  	[case "${enableval}" in yes | "") am_driver_vncserver=yes ;; no) am_driver_vncserver=no ;; *) am_driver_vncserver=yes ;; esac], [am_driver_vncserver=yes])
   if test "$am_driver_vncserver" = "yes"; then
-		AC_SUBST(MY_VNCSERVER_CPPFLAGS,-DHAVE_VNCSERVER)
-	fi
+    PKG_CHECK_MODULES([libvncserver], [libvncserver], [HAVE_LIBVNCSERVER=1])
+    AS_IF([test "$HAVE_LIBVNCSERVER" = 1], [AM_CONDITIONAL([HAVE_DRIVER_VNCSERVER], test "$am_driver_vncserver" = "yes")
+                                            AC_SUBST(MY_VNCSERVER_CPPFLAGS,-DHAVE_VNCSERVER)])  
+  fi
 	
 AC_ARG_ENABLE([driver-ax206dpf],
  	AS_HELP_STRING(--disable-driver-ax206dpf,disable driver ax206dpf),

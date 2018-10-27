@@ -1,4 +1,4 @@
-AM_CXXFLAGS = -I$(top_srcdir) @MY_VNCSERVER_CPPFLAGS@ @MY_DEBUG_CPPFLAGS@
+AM_CXXFLAGS = -I$(top_srcdir) @MY_DEBUG_CPPFLAGS@
 
 lib_LTLIBRARIES = libglcddrivers.la
 libglcddrivers_la_SOURCES = common.cpp config.cpp driver.cpp drivers.cpp port.cpp simlcd.cpp framebuffer.cpp \
@@ -20,6 +20,10 @@ endif
 if HAVE_DRIVER_SSD1322FTDI
 libglcddrivers_la_SOURCES += ssd1322ftdi.cpp
 AM_CXXFLAGS += @libftdi_CFLAGS@ 
+endif
+if HAVE_DRIVER_VNCSERVER
+libglcddrivers_la_SOURCES += vncserver.cpp
+AM_CXXFLAGS += @MY_VNCSERVER_CPPFLAGS@ @libvncserver_CFLAGS@ 
 endif
 
 libglcddrivers_la_LDFLAGS = -version-info @GLCDDRIVERS_MAJOR_VERSION@:@GLCDDRIVERS_MINOR_VERSION@:@GLCDDRIVERS_MICRO_VERSION@  -lpthread
