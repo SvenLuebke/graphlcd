@@ -1,4 +1,4 @@
-AM_CXXFLAGS = -I$(top_srcdir) @MY_LIBFREETYPE2_CPPFLAGS@ @libfreetype2_CFLAGS@ @imagemagick_CFLAGS@ @MY_IMAGEMAGICK_CPPFLAGS@
+AM_CXXFLAGS = -I$(top_srcdir) @MY_LIBFREETYPE2_CPPFLAGS@ @libfreetype2_CFLAGS@ @imagemagick_CFLAGS@ @MY_IMAGEMAGICK_CPPFLAGS@ @MY_DEBUG_CPPFLAGS@
 
 lib_LTLIBRARIES = libglcdgraphics.la
 libglcdgraphics_la_SOURCES = bitmap.cpp common.cpp extformats.cpp font.cpp glcd.cpp \

@@ -16,9 +16,6 @@
 
 #include <ftdi.h>
 
-#include <wiringPi.h>
-#include <wiringPiSPI.h>
-
 #include "common.h"
 #include "config.h"
 #include "ssd1306.h"
@@ -66,7 +63,7 @@ cDriverSSD1306::cDriverSSD1306(cDriverConfig * config)
 {
     refreshCounter = 0;
 
-    wiringPiSetup();
+    //wiringPiSetup();
 }
 
 cDriverSSD1306::~cDriverSSD1306()
@@ -118,6 +115,7 @@ int cDriverSSD1306::Init()
         return -1;
     }
 
+#if 0
     pinMode(kGpioReset, OUTPUT);
     pinMode(kGpioDC, OUTPUT);
 
@@ -125,6 +123,7 @@ int cDriverSSD1306::Init()
     digitalWrite(kGpioDC, LOW);
 
     wiringPiSPISetup(kSpiBus, 1000000);
+#endif
 
     /* reset display */
     Reset();
@@ -310,33 +309,33 @@ void cDriverSSD1306::SetBrightness(unsigned int percent)
 
 void cDriverSSD1306::Reset()
 {
-    digitalWrite(kGpioReset, LOW);
+    //digitalWrite(kGpioReset, LOW);
     usleep(1000);
-    digitalWrite(kGpioReset, HIGH);
+    //digitalWrite(kGpioReset, HIGH);
 }
 
 void cDriverSSD1306::WriteCommand(uint8_t command)
 {
-    wiringPiSPIDataRW(kSpiBus, &command, 1);
+    //wiringPiSPIDataRW(kSpiBus, &command, 1);
 }
 
 void cDriverSSD1306::WriteCommand(uint8_t command, uint8_t argument)
 {
     uint8_t buffer[2] = {command, argument};
-    wiringPiSPIDataRW(kSpiBus, buffer, 2);
+    //wiringPiSPIDataRW(kSpiBus, buffer, 2);
 }
 
 void cDriverSSD1306::WriteCommand(uint8_t command, uint8_t argument1, uint8_t argument2)
 {
     uint8_t buffer[3] = {command, argument1, argument2};
-    wiringPiSPIDataRW(kSpiBus, buffer, 3);
+    //wiringPiSPIDataRW(kSpiBus, buffer, 3);
 }
 
 void cDriverSSD1306::WriteData(uint8_t * buffer, uint32_t length)
 {
-    digitalWrite(kGpioDC, HIGH);
-    wiringPiSPIDataRW(kSpiBus, buffer, length);
-    digitalWrite(kGpioDC, LOW);
+    //digitalWrite(kGpioDC, HIGH);
+    //wiringPiSPIDataRW(kSpiBus, buffer, length);
+    //digitalWrite(kGpioDC, LOW);
 }
 
 } // end of namespace

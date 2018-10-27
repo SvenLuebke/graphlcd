@@ -78,8 +78,49 @@ AC_ARG_ENABLE([fontconfig],
 		AC_CHECK_LIB([fontconfig], [FcNameParse])
 		AS_IF([test "$ac_cv_lib_fontconfig_FcNameParse" = yes], [AC_SUBST(LIBFONTCONFIG_CPPFLAGS,-DHAVE_FONTCONFIG) AC_SUBST(LIBFONTCONFIG_LDFLAGS,-lfontconfig)])
 	fi
-	
 
+AC_ARG_ENABLE([debug],
+ 	AS_HELP_STRING(--disable-debug,disable debug output),
+ 	[case "${enableval}" in yes | "") am_debug=yes ;; no) am_debug=no ;; *) am_debug=yes ;; esac], [am_debug=yes])
+  if test "$am_debug" = "yes"; then
+    AC_DEFINE(HAVE_DEBUG, 1, [Define to enable debug output])
+		AC_SUBST(MY_DEBUG_CPPFLAGS,-DHAVE_DEBUG)
+	fi
+
+AC_ARG_ENABLE([driver_vncserver],
+ 	AS_HELP_STRING(--disable-driver-vncserver,disable usage of vncserver),
+ 	[case "${enableval}" in yes | "") am_driver_vncserver=yes ;; no) am_driver_vncserver=no ;; *) am_driver_vncserver=yes ;; esac], [am_driver_vncserver=yes])
+  if test "$am_driver_vncserver" = "yes"; then
+		AC_SUBST(MY_VNCSERVER_CPPFLAGS,-DHAVE_VNCSERVER)
+	fi
+	
+AC_ARG_ENABLE([driver-ax206dpf],
+ 	AS_HELP_STRING(--disable-driver-ax206dpf,disable driver ax206dpf),
+ 	[case "${enableval}" in yes | "") am_driver_ax206dpf=yes ;; no) am_driver_ax206dpf=no ;; *) am_driver_ax206dpf=no ;; esac], [am_driver_ax206dpf=no])
+  AM_CONDITIONAL([HAVE_DRIVER_AX206DPF], test "$am_driver_ax206dpf" = "yes")
+
+AC_ARG_ENABLE([driver-picolcd-256x64],
+ 	AS_HELP_STRING(--disable-driver-picolcd-256x64,disable driver picolcd-256x64),
+ 	[case "${enableval}" in yes | "") am_driver_picolcd_256x64=yes ;; no) am_driver_picolcd_256x64=no ;; *) am_driver_picolcd_256x64=no ;; esac], [am_driver_picolcd_256x64=no])
+  AM_CONDITIONAL([HAVE_DRIVER_PICOLCD_256X64], test "$am_driver_picolcd_256x64" = "yes")
+
+AC_ARG_ENABLE([driver-ili9341],
+ 	AS_HELP_STRING(--disable-driver-ili9341,disable driver ili9341),
+ 	[case "${enableval}" in yes | "") am_driver_ili9341=yes ;; no) am_driver_ili9341=no ;; *) am_driver_ili9341=no ;; esac], [am_driver_ili9341=no])
+  AM_CONDITIONAL([HAVE_DRIVER_ILI9341], test "$am_driver_ili9341" = "yes")
+
+AC_ARG_ENABLE([driver-ssd1306],
+ 	AS_HELP_STRING(--disable-driver-ssd1306,disable driver ssd1306),
+ 	[case "${enableval}" in yes | "") am_driver_ssd1306=yes ;; no) am_driver_ssd1306=no ;; *) am_driver_ssd1306=no ;; esac], [am_driver_ssd1306=no])
+  AM_CONDITIONAL([HAVE_DRIVER_SSD1306], test "$am_driver_ssd1306" = "yes")
+
+AC_ARG_ENABLE([driver-ssd1322ftdi],
+ 	AS_HELP_STRING(--disable-driver-ssd1322ftdi,disable driver ssd1322ftdi),
+ 	[case "${enableval}" in yes | "") am_driver_ssd1322ftdi=yes ;; no) am_driver_ssd1322ftdi=no ;; *) am_driver_ssd1322ftdi=yes ;; esac], [am_driver_ssd1322ftdi=yes])
+  if test "$am_driver_ssd1322ftdi" = "yes"; then
+    PKG_CHECK_MODULES([libftdi], [libftdi], [HAVE_LIBFTDI=1])
+    AM_CONDITIONAL([HAVE_DRIVER_SSD1322FTDI], test "$am_driver_ssd1322ftdi" = "yes")
+  fi
 
 CXXFLAGS="$CXXFLAGS -Wall -Woverloaded-virtual -fPIC -D_GNU_SOURCE"
 dnl CXXFLAGS="$CXXFLAGS -MMD"
