@@ -7,3 +7,5 @@ libglcdskin_incdir = $(top_builddir)/glcdskin
 
 SUBDIRS = glcddrivers glcdgraphics glcdskin tools
 
+sysconf_DATA = graphlcd.conf
+
