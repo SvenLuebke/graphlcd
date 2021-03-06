@@ -97,6 +97,7 @@ AC_ARG_ENABLE([driver_vncserver],
     PKG_CHECK_MODULES([libjpeg], [libjpeg], [])
     PKG_CHECK_MODULES([libturbojpeg], [libturbojpeg], [])
     PKG_CHECK_MODULES([zlib], [zlib], [])
+    PKG_CHECK_MODULES([libsystemd], [libsystemd], [])
     AS_IF([test "$HAVE_LIBVNCSERVER" = 1], [AC_SUBST(MY_VNCSERVER_CPPFLAGS,-DHAVE_VNCSERVER)])
   fi
   AM_CONDITIONAL([HAVE_DRIVER_VNCSERVER], test "$am_driver_vncserver" = "yes")
