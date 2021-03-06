@@ -19,12 +19,12 @@ if HAVE_DRIVER_SSD1306
 libglcddrivers_la_SOURCES += ssd1306.cpp
 endif
 if HAVE_DRIVER_SSD1322FTDI
-libglcddrivers_la_SOURCES += ssd1322ftdi.cpp
-AM_CXXFLAGS += @libftdi1_CFLAGS@ 
+libglcddrivers_la_SOURCES += iodrv_libftdi.cpp ssd1322ftdi.cpp
+AM_CXXFLAGS += @libftdi1_CFLAGS@
 endif
 if HAVE_DRIVER_VNCSERVER
 libglcddrivers_la_SOURCES += vncserver.cpp
-AM_CXXFLAGS += @MY_VNCSERVER_CPPFLAGS@ @libvncserver_CFLAGS@ 
+AM_CXXFLAGS += @MY_VNCSERVER_CPPFLAGS@ @libvncserver_CFLAGS@
 endif
 
 libglcddrivers_la_LDFLAGS = -version-info @GLCDDRIVERS_MAJOR_VERSION@:@GLCDDRIVERS_MINOR_VERSION@:@GLCDDRIVERS_MICRO_VERSION@ \

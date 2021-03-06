@@ -1,242 +1,215 @@
 /*
  * GraphLCD driver library
  *
- * ssd1306.c  -  SSD1306 OLED driver class
+ * ssd1322ftdi.c  -  SSD1322 OLED driver class (via FTDI adapter)
  *
  * This file is released under the GNU General Public License. Refer
  * to the COPYING file distributed with this package.
  *
- * (c) 2014 Andreas Regel <andreas.regel AT powarman.de>
+ * (c) 2020 Sven Lübke <sven.luebke AT mikrosol.de>
  */
 
 #include <stdint.h>
-#include <syslog.h>
+//#include <syslog.h>
 #include <unistd.h>
 #include <cstring>
 
 #include <ftdi.h>
 
-#include "common.h"
+//#include "common.h"
 #include "config.h"
-#include "ssd1306.h"
 
+#include "ssd1322ftdi.h"
+#include "iodrv.h"
 
 namespace GLCD
 {
 
-const int kLcdWidth  = 128;
+const int kLcdWidth  = 256;
 const int kLcdHeight = 64;
 
-const int kSpiBus    = 0;
+// Display commands
+const uint8_t kSSD1322CmdSetColumnAddress =                 0x15;
+const uint8_t kSSD1322CmdSetRowAddress =                    0x75;
+const uint8_t kSSD1322CmdWriteData =                        0x5C;
+const uint8_t kSSD1322CmdReadData =                         0x5D;
 
-const int kGpioReset = 15;
-const int kGpioDC    = 16;
-
-const uint8_t kCmdSetLowerColumn            = 0x00;
-const uint8_t kCmdSetHigherColumn           = 0x10;
-const uint8_t kCmdSetMemoryAddressingMode   = 0x20;
-const uint8_t kCmdSetColumnAddress          = 0x21;
-const uint8_t kCmdSetPageAddress            = 0x22;
-const uint8_t kCmdSetDisplayStartLine       = 0x40;
-const uint8_t kCmdSetContrast               = 0x81;
-const uint8_t kCmdSetChargePump             = 0x8D;
-const uint8_t kCmdSetSegmentReMap           = 0xA0;
-const uint8_t kCmdEntireDisplayOnResume     = 0xA4;
-const uint8_t kCmdEntireDisplayOn           = 0xA5;
-const uint8_t kCmdSetNormalDisplay          = 0xA6;
-const uint8_t kCmdSetInverseDisplay         = 0xA7;
-const uint8_t kCmdSetMultiplexRatio         = 0xA8;
-const uint8_t kCmdSetDisplayOff             = 0xAE;
-const uint8_t kCmdSetDisplayOn              = 0xAF;
-const uint8_t kCmdSetPageStart              = 0xB0;
-const uint8_t kCmdSetComScanInc             = 0xC0;
-const uint8_t kCmdSetComScanDec             = 0xC8;
-const uint8_t kCmdSetDisplayOffset          = 0xD3;
-const uint8_t kCmdSetDisplayClockDiv        = 0xD5;
-const uint8_t kCmdSetPreChargePeriod        = 0xD9;
-const uint8_t kCmdSetComPins                = 0xDA;
-const uint8_t kCmdSetVComDeselectLevel      = 0xDB;
+const uint8_t kSSD1322CmdEnableGreyScale =                  0x00;
+const uint8_t kSSD1322CmdSetMode =                          0xA0;
+const uint8_t kSSD1322CmdSetDisplayStartLine =              0xA1;
+const uint8_t kSSD1322CmdSetDisplayOffset =                 0xA2;
+const uint8_t kSSD1322CmdEntireDisplayOff =                 0xA4;
+const uint8_t kSSD1322CmdEntireDisplayOn =                  0xA5;
+const uint8_t kSSD1322CmdSetNormalDisplay =                 0xA6;
+const uint8_t kSSD1322CmdSetInverseDisplay =                0xA7;
+const uint8_t kSSD1322CmdSelectVDD =                        0xAB;
+const uint8_t kSSD1322CmdSleepModeOn =                      0xAE;
+const uint8_t kSSD1322CmdSleepModeOff =                     0xAF;
+const uint8_t kSSD1322CmdSetPhaseLength =                   0xB1;
+const uint8_t kSSD1322CmdSetClockFrequency =                0xB3;
+const uint8_t kSSD1322CmdDisplayEnhancementA =              0xB4;
+const uint8_t kSSD1322CmdSetGPIO =                          0xB5;
+const uint8_t kSSD1322CmdSetSecondPrechargePeriod =         0xB6;
+const uint8_t kSSD1322CmdSetGrayScaleTable =                0xB8;
+const uint8_t kSSD1322CmdSelectDefaultLinearGrayScaleable = 0xB9;
+const uint8_t kSSD1322CmdSetPrechargeVoltage =              0xBB;
+const uint8_t kSSD1322CmdSetVcomH =                         0xBE;
+const uint8_t kSSD1322CmdSetContrastCurrent =               0xC1;
+const uint8_t kSSD1322CmdMasterContrastCurrentControl =     0xC7;
+const uint8_t kSSD1322CmdSetMUXRatio =                      0xCA;
+const uint8_t kSSD1322CmdDisplayEnhancementB =              0xD1;
+const uint8_t kSSD1322CmdSetCommandLock =                   0xFD;
 
 
-cDriverSSD1306::cDriverSSD1306(cDriverConfig * config)
+cDriverSSD1322::cDriverSSD1322(cDriverConfig * config)
 :   cDriver(config)
 {
-    refreshCounter = 0;
-
-    //wiringPiSetup();
+  refreshCounter = 0;
+  if (EXIT_SUCCESS == IODRV_Init(0, &io_handle))
+  {}
 }
 
-cDriverSSD1306::~cDriverSSD1306()
+cDriverSSD1322::~cDriverSSD1322()
 {
-    //delete port;
+  IODRV_DeInit(&io_handle);
 }
 
-int cDriverSSD1306::Init()
+int cDriverSSD1322::Init()
 {
-    int x;
+  width = config->width;
+  if (width <= 0)
+    width = kLcdWidth;
+  height = config->height;
+  if (height <= 0)
+    height = kLcdHeight;
+  fprintf(stdout, "Configured with %d x %d\n", width, height);
 
-    width = config->width;
-    if (width <= 0)
-        width = kLcdWidth;
-    height = config->height;
-    if (height <= 0)
-        height = kLcdHeight;
+  this->gfxMemBytesOneRow = width / 2;
+  this->bufferSize = this->gfxMemBytesOneRow * height;
 
-    for (unsigned int i = 0; i < config->options.size(); i++)
+  for (unsigned int i = 0; i < config->options.size(); i++)
+  {
+    if (config->options[i].name == "")
     {
-        if (config->options[i].name == "")
-        {
-        }
     }
+  }
 
-    // setup lcd array (wanted state)
-    newLCD = new unsigned char*[width];
-    if (newLCD)
-    {
-        for (x = 0; x < width; x++)
-        {
-            newLCD[x] = new unsigned char[(height + 7) / 8];
-            memset(newLCD[x], 0, (height + 7) / 8);
-        }
-    }
-    // setup lcd array (current state)
-    oldLCD = new unsigned char*[width];
-    if (oldLCD)
-    {
-        for (x = 0; x < width; x++)
-        {
-            oldLCD[x] = new unsigned char[(height + 7) / 8];
-            memset(oldLCD[x], 0, (height + 7) / 8);
-        }
-    }
+  // setup lcd array (wanted state)
+  this->newLCD = new unsigned char[bufferSize];
+  if (this->newLCD)
+  {
+    memset(&(this->newLCD[0]), 0, bufferSize);
+  }
 
-    if (config->device == "")
-    {
-        return -1;
-    }
+  // setup lcd array (current state)
+  this->oldLCD = new unsigned char[bufferSize];
+  if (this->oldLCD)
+  {
+    memset(&this->oldLCD[0], 0, bufferSize);
+  }
 
-#if 0
-    pinMode(kGpioReset, OUTPUT);
-    pinMode(kGpioDC, OUTPUT);
+  if (config->device == "")
+  {
+      return -1;
+  }
 
-    digitalWrite(kGpioReset, HIGH);
-    digitalWrite(kGpioDC, LOW);
+  WriteCommand(kSSD1322CmdSetCommandLock, 0x12);
+  WriteCommand(kSSD1322CmdSleepModeOn);
+  WriteCommand(kSSD1322CmdSetClockFrequency, 0x91);
+  WriteCommand(kSSD1322CmdSetMUXRatio, 0x3F);                  /* multiplex ratio */ /* duty = 1/64 */
+  WriteCommand(kSSD1322CmdSetDisplayOffset, 0x00);             /* set offset */
+  WriteCommand(kSSD1322CmdSetDisplayStartLine, 0x00);          /* start line */
+  WriteCommand(kSSD1322CmdSetMode, 0x14, 0x11);                /* set remap */
+  IODRV_TriggerXfer(io_handle);
 
-    wiringPiSPISetup(kSpiBus, 1000000);
-#endif
+  WriteCommand(kSSD1322CmdSelectVDD, 0x01);                    /* Enable internal VDD  regulator */
+  WriteCommand(kSSD1322CmdDisplayEnhancementA, 0xA0, 0xFD);    /* Display Enhancement A */
+  WriteCommand(kSSD1322CmdSetContrastCurrent, 0x9F);           /* Set Contrast Current */
+  WriteCommand(kSSD1322CmdMasterContrastCurrentControl, 0x0F); /* Master Contrast Current Control */
+  WriteCommand(kSSD1322CmdSelectDefaultLinearGrayScaleable);   /* Select Default Linear Gray Scale table */
+  //WriteCommand(kSSD1322CmdEnableGreyScale);                  /* Enable Gray Scale table */
+  WriteCommand(kSSD1322CmdSetPhaseLength, 0xE2);               /* Set Phase Length */
+  WriteCommand(kSSD1322CmdDisplayEnhancementB, 0x82, 0x20);    /* Display Enhancement  B */ /* User is recommended to set A[5:4] to 00b */ /* Default */
+  WriteCommand(kSSD1322CmdSetPrechargeVoltage, 0x1F);          /* Set Pre-charge voltage */
+  WriteCommand(kSSD1322CmdSetSecondPrechargePeriod, 0x08);     /* Set Second Precharge Period */
+  WriteCommand(kSSD1322CmdSetVcomH, 0x07);                     /* Set VCOMH */
+  WriteCommand(kSSD1322CmdSetNormalDisplay);                   /* Normal Display */
+  // clear display
+  Clear();
+  WriteCommand(kSSD1322CmdSleepModeOff);                       /* Sleep mode OFF */
+  IODRV_TriggerXfer(io_handle);
 
-    /* reset display */
-    Reset();
-    usleep(1000);
 
-    WriteCommand(kCmdSetDisplayOff);
+  *oldConfig = *config;
+  //syslog(LOG_INFO, "%s: SSD1322 initialized.\n", config->name.c_str());
+  return 0;
+}
 
-    if (height == 64)
-    {
-        WriteCommand(kCmdSetMultiplexRatio, 0x3F);
-        WriteCommand(kCmdSetComPins, 0x12);
-    }
-    else if (height == 32)
-    {
-        WriteCommand(kCmdSetMultiplexRatio, 0x1F);
-        WriteCommand(kCmdSetComPins, 0x02);
-    }
+int cDriverSSD1322::DeInit()
+{
+  // free lcd array (wanted state)
+  if (this->newLCD)
+  {
+    delete this->newLCD;
+  }
+  // free lcd array (current state)
+  if (this->oldLCD)
+  {
+    delete this->oldLCD;
+  }
 
-    WriteCommand(kCmdSetDisplayOffset, 0x00);
-    WriteCommand(kCmdSetDisplayStartLine | 0x00);
-    WriteCommand(kCmdSetMemoryAddressingMode, 0x01);
-    WriteCommand(kCmdSetSegmentReMap | 0x01);
-    WriteCommand(kCmdSetComScanDec);
-    WriteCommand(kCmdSetContrast, config->brightness * 255 / 100);
-    WriteCommand(kCmdEntireDisplayOnResume);
-    WriteCommand(kCmdSetNormalDisplay);
-    WriteCommand(kCmdSetDisplayClockDiv, 0x80);
-    WriteCommand(kCmdSetChargePump, 0x14);
-    WriteCommand(kCmdSetDisplayOn);
+  return 0;
+}
 
-    *oldConfig = *config;
-
-    // clear display
-    Clear();
-
-    syslog(LOG_INFO, "%s: SSD1306 initialized.\n", config->name.c_str());
+int cDriverSSD1322::CheckSetup()
+{
+  if (config->device != oldConfig->device ||
+      config->width != oldConfig->width ||
+      config->height != oldConfig->height)
+  {
+    DeInit();
+    Init();
     return 0;
+  }
+
+  if (config->upsideDown != oldConfig->upsideDown ||
+      config->invert != oldConfig->invert)
+  {
+    oldConfig->upsideDown = config->upsideDown;
+    oldConfig->invert = config->invert;
+    return 1;
+  }
+  return 0;
 }
 
-int cDriverSSD1306::DeInit()
+void cDriverSSD1322::Clear()
 {
-    int x;
-    // free lcd array (wanted state)
-    if (newLCD)
-    {
-        for (x = 0; x < width; x++)
-        {
-            delete[] newLCD[x];
-        }
-        delete[] newLCD;
-    }
-    // free lcd array (current state)
-    if (oldLCD)
-    {
-        for (x = 0; x < width; x++)
-        {
-            delete[] oldLCD[x];
-        }
-        delete[] oldLCD;
-    }
-
-    return 0;
-}
-
-int cDriverSSD1306::CheckSetup()
-{
-    if (config->device != oldConfig->device ||
-        config->width != oldConfig->width ||
-        config->height != oldConfig->height)
-    {
-        DeInit();
-        Init();
-        return 0;
-    }
-
-    if (config->upsideDown != oldConfig->upsideDown ||
-        config->invert != oldConfig->invert)
-    {
-        oldConfig->upsideDown = config->upsideDown;
-        oldConfig->invert = config->invert;
-        return 1;
-    }
-    return 0;
-}
-
-void cDriverSSD1306::Clear()
-{
-    for (int x = 0; x < width; x++)
-        memset(newLCD[x], 0, (height + 7) / 8);
+  memset(&(this->newLCD[0]), 0, bufferSize);
 }
 
 
-void cDriverSSD1306::SetPixel(int x, int y, uint32_t data)
+void cDriverSSD1322::SetPixel(int x, int y, uint32_t data)
 {
-    if (x >= width || y >= height)
-        return;
+  if (x >= width || y >= height)
+    return;
 
-    if (config->upsideDown)
-    {
-        x = width - 1 - x;
-        y = height - 1 - y;
-    }
+  if (config->upsideDown)
+  {
+    x = width - 1 - x;
+    y = height - 1 - y;
+  }
 
-    int offset = (y % 8);
-    if (data == GRAPHLCD_White)
-        newLCD[x][y / 8] |= (1 << offset);
-    else
-        newLCD[x][y / 8] &= ( 0xFF ^ (1 << offset) );
+  int y_offset = (y * this->gfxMemBytesOneRow);
+  uint32_t ssd_data = x % 2 ? 0x0F : 0xF0;
+  if (data == GRAPHLCD_White)
+    newLCD[y_offset + x/2] |= ssd_data;
+  else
+    newLCD[y_offset + x / 2] &= ssd_data;
 }
 
 
 #if 0
-void cDriverSSD1306::Set8Pixels(int x, int y, unsigned char data)
+void cDriverSSD1322::Set8Pixels(int x, int y, unsigned char data)
 {
     if (x >= width || y >= height)
         return;
@@ -262,80 +235,132 @@ void cDriverSSD1306::Set8Pixels(int x, int y, unsigned char data)
 }
 #endif
 
-void cDriverSSD1306::Refresh(bool refreshAll)
+void cDriverSSD1322::Refresh(bool refreshAll)
 {
-    int x;
-    int y;
-    uint8_t numPages = (height + 7) / 8;
-    unsigned char data[16];
+  uint8_t* buffer;
+  uint32_t x;
+  int32_t y;
 
-    if (CheckSetup() == 1)
-        refreshAll = true;
 
-    if (config->refreshDisplay > 0)
+  refreshAll = true;
+  if (refreshAll)
+  {
+    WriteCommand(kSSD1322CmdSetColumnAddress, 0x1C, 0x5B);
+    WriteCommand(kSSD1322CmdSetRowAddress, 0, this->height);
+    WriteCommand(kSSD1322CmdWriteData);
+    buffer = IODRV_GetDataBuffer();
+    int tmpIdx;
+    for (y = 0; y < this->height; y++)
     {
-        refreshCounter = (refreshCounter + 1) % config->refreshDisplay;
-        if (!refreshAll && !refreshCounter)
-            refreshAll = true;
+      for (x = 0; x < this->gfxMemBytesOneRow; x++)
+      {
+        tmpIdx = (y * this->gfxMemBytesOneRow) + x;
+        buffer[tmpIdx] = newLCD[tmpIdx];
+      }
     }
-
-    refreshAll = true;
-    if (refreshAll)
-    {
-        WriteCommand(kCmdSetColumnAddress, 0, width - 1);
-        WriteCommand(kCmdSetPageAddress, 0, numPages - 1);
-        for (x = 0; x < width; x++)
-        {
-            for (y = 0; y < numPages; y++)
-            {
-                data[y] = (newLCD[x][y]) ^ (config->invert ? 0xff : 0x00);
-            }
-            WriteData(data, numPages);
-            memcpy(oldLCD[x], newLCD[x], numPages);
-        }
-        // and reset RefreshCounter
-        refreshCounter = 0;
-    }
-    else
-    {
-        // draw only the changed bytes
-    }
+    IODRV_WriteDataBlock(this->bufferSize);
+    IODRV_TriggerXfer(io_handle);
+    //memcpy(&(this->oldLCD[0]), &(this->newLCD[0]), bufferSize);
+    // and reset RefreshCounter
+    //refreshCounter = 0;
+  }
+  else
+  {
+      // draw only the changed bytes
+  }
 }
 
-void cDriverSSD1306::SetBrightness(unsigned int percent)
+void cDriverSSD1322::SetBrightness(unsigned int percent)
 {
-    WriteCommand(kCmdSetContrast, percent * 255 / 100);
+  //WriteCommand(kCmdSetContrast, percent * 255 / 100);
 }
 
-void cDriverSSD1306::Reset()
+void cDriverSSD1322::Reset()
 {
-    //digitalWrite(kGpioReset, LOW);
-    usleep(1000);
-    //digitalWrite(kGpioReset, HIGH);
+
 }
 
-void cDriverSSD1306::WriteCommand(uint8_t command)
+void cDriverSSD1322::DrawHLine(uint8_t color, uint16_t x1, uint16_t y1, uint16_t x2)
 {
-    //wiringPiSPIDataRW(kSpiBus, &command, 1);
+  uint16_t index;
+
+  index = (x1 / 2) + (y1 * this->gfxMemBytesOneRow);
+  for (int32_t i = 0; i < (x2 - x1) / 2; i++)
+  {
+    this->newLCD[index + i] = color;
+  }
 }
 
-void cDriverSSD1306::WriteCommand(uint8_t command, uint8_t argument)
+void cDriverSSD1322::DrawHLineDirect(uint8_t color, uint16_t x1, uint16_t y1, uint16_t x2)
 {
-    uint8_t buffer[2] = {command, argument};
-    //wiringPiSPIDataRW(kSpiBus, buffer, 2);
+  uint8_t *buffer;
+  int32_t i;
+
+  WriteCommand(kSSD1322CmdSetColumnAddress, 0x1C + x1/4, 0x5B);
+  WriteCommand(kSSD1322CmdSetRowAddress, (uint8_t) y1, y1 + 1);
+  WriteCommand(kSSD1322CmdWriteData);
+  buffer = IODRV_GetDataBuffer();
+  for (i = 0; i < (x2 - x1) / 2; i++)
+  {
+    buffer[i] = color;
+  }
+  IODRV_WriteDataBlock(i);
+  IODRV_TriggerXfer(io_handle);
 }
 
-void cDriverSSD1306::WriteCommand(uint8_t command, uint8_t argument1, uint8_t argument2)
+
+void cDriverSSD1322::TestDirect(void)
 {
-    uint8_t buffer[3] = {command, argument1, argument2};
-    //wiringPiSPIDataRW(kSpiBus, buffer, 3);
+  uint8_t* buffer;
+
+
+  WriteCommand(kSSD1322CmdSetColumnAddress, 0x1C, 0x5B );
+  WriteCommand(kSSD1322CmdSetRowAddress, 0x00, this->height);
+  WriteCommand(kSSD1322CmdWriteData);
+  buffer = IODRV_GetDataBuffer();
+  for (uint32_t i = 0; i < this->bufferSize; i += 2)
+  {
+    buffer[i] = (i % 0x0A) & 0x0F;
+    buffer[i + 1] = ((i % 0x0A) << 4) & 0xF0;
+  }
+  IODRV_WriteDataBlock(this->bufferSize);
+  IODRV_TriggerXfer(io_handle);
 }
 
-void cDriverSSD1306::WriteData(uint8_t * buffer, uint32_t length)
+void cDriverSSD1322::ClearDirect(void)
 {
-    //digitalWrite(kGpioDC, HIGH);
-    //wiringPiSPIDataRW(kSpiBus, buffer, length);
-    //digitalWrite(kGpioDC, LOW);
+  uint8_t* buffer;
+
+
+  WriteCommand(kSSD1322CmdSetColumnAddress, 0x1C, 0x5B);
+  WriteCommand(kSSD1322CmdSetRowAddress, 0x00, this->height-1);
+  WriteCommand(kSSD1322CmdWriteData);
+  buffer = IODRV_GetDataBuffer();
+  for (uint32_t i = 0; i < this->bufferSize; i++)
+  {
+    buffer[i] = 0x00;
+  }
+  IODRV_WriteDataBlock(this->bufferSize);
+  IODRV_TriggerXfer(io_handle);
+}
+
+void cDriverSSD1322::WriteCommand(uint8_t command)
+{
+  IODRV_WriteCommand(command);
+}
+
+void cDriverSSD1322::WriteCommand(uint8_t command, uint8_t argument)
+{
+  IODRV_WriteCommand(command);
+  IODRV_WriteData(argument);
+}
+
+void cDriverSSD1322::WriteCommand(uint8_t command, uint8_t argument1, uint8_t argument2)
+{
+  IODRV_WriteCommand(command);
+  IODRV_WriteData(argument1);
+  IODRV_WriteData(argument2);
 }
 
 } // end of namespace
+
