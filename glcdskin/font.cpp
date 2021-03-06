@@ -13,8 +13,6 @@
 namespace GLCD
 {
 
-int cSkinFont::FcInitCount = 0;
-
 
 cSkinFont::cSkinFont(cSkin * Parent)
 :   mSkin(Parent),
@@ -25,12 +23,12 @@ cSkinFont::cSkinFont(cSkin * Parent)
 }
 
 cSkinFont::~cSkinFont(void) {
-#ifdef HAVE_FONTCONFIG
-    cSkinFont::FcInitCount --;
-    if (cSkinFont::FcInitCount <= 0) {
-      FcFini();
-    }
-#endif
+}
+
+bool cSkinFont::FileExists(const std::string& path)
+{
+    std::ifstream f(path.c_str());
+    return (f.is_open());
 }
 
 bool cSkinFont::ParseUrl(const std::string & url)
@@ -90,10 +88,7 @@ bool cSkinFont::ParseUrl(const std::string & url)
             return false;
         }
 
-        if (cSkinFont::FcInitCount <= 0) {
-          FcInit();
-        }
-        cSkinFont::FcInitCount ++;
+        FcInit();
 
         FcPattern *pat = FcNameParse((FcChar8 *) rawfont.c_str() );
         rawfont = "";
@@ -143,16 +138,7 @@ bool cSkinFont::ParseUrl(const std::string & url)
         }
         mFile += "fonts/";
         mFile += rawfont;
-#if (__GNUC__ < 3)
-        std::ifstream f(mFile.c_str(), std::ios::in | std::ios::binary);
-#else
-        std::ifstream f(mFile.c_str(), std::ios_base::in | std::ios_base::binary);
-#endif
-        if (f.is_open())
-        {
-            f.close();
-        }
-        else
+        if (!FileExists(mFile))
         {
             // then try generic font dir
             mFile = mSkin->Config().FontPath();
@@ -162,6 +148,29 @@ bool cSkinFont::ParseUrl(const std::string & url)
                     mFile += '/';
             }
             mFile += rawfont;
+
+#ifdef HAVE_FONTCONFIG
+            // If we have fontconfig, then at last search for the font file in
+            // all system default font directories
+            if (!FileExists(mFile))
+            {
+                FcInit();
+
+                FcStrList* dirlist = FcConfigGetFontDirs(NULL);
+                FcChar8* dir;
+                while ((dir = FcStrListNext(dirlist)))
+                {
+                    mFile.assign((const char*)dir);
+                    mFile += '/';
+                    mFile += rawfont;
+                    if (FileExists(mFile))
+                    {
+                        break;
+                    }
+                }
+                FcStrListDone(dirlist);
+            }
+#endif
         }
     }
 

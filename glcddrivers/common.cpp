@@ -17,6 +17,7 @@
 #include <sched.h>
 #include <time.h>
 #include <unistd.h>
+#include <algorithm>
 #include <sys/time.h>
 #include <sys/resource.h>
 
@@ -189,6 +190,7 @@ unsigned char ReverseBits(unsigned char value)
     return BitReverseTable[value];
 }
 
+#if 0
 void clip(int & value, int min, int max)
 {
     if (value < min)
@@ -197,36 +199,15 @@ void clip(int & value, int min, int max)
         value = max;
 }
 
-void sort(int & value1, int & value2)
-{
-    if (value2 < value1)
-    {
-        int tmp;
-        tmp = value2;
-        value2 = value1;
-        value1 = tmp;
-    }
-}
-
 std::string trim(const std::string & s)
 {
-    std::string::size_type start, end;
-
-    start = 0;
-    while (start < s.length())
-    {
-        if (!isspace(s[start]))
-            break;
-        start++;
-    }
-    end = s.length() - 1;
-    while (end > start)
-    {
-        if (!isspace(s[end]))
-            break;
-        end--;
-    }
-    return s.substr(start, end - start + 1);
+    std::string::size_type left, right;
+    left = std::find_if_not(s.begin(), s.end(), isspace) - s.begin();
+    if (left == s.length()) // String consists of space characters only
+        return "";
+    right = std::find_if_not(s.rbegin(), s.rend(), isspace) - s.rbegin();
+    return s.substr(left, s.length() - left - right);
 }
+#endif
 
 } // end of namespace

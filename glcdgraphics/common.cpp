@@ -12,6 +12,7 @@
 
 #include <ctype.h>
 #include <syslog.h>
+#include <algorithm>
 
 #include "common.h"
 
@@ -40,23 +41,12 @@ void sort(int & value1, int & value2)
 
 std::string trim(const std::string & s)
 {
-	std::string::size_type start, end;
-
-	start = 0;
-	while (start < s.length())
-	{
-		if (!isspace(s[start]))
-			break;
-		start++;
-	}
-	end = s.length() - 1;
-	while (end > start)
-	{
-		if (!isspace(s[end]))
-			break;
-		end--;
-	}
-	return s.substr(start, end - start + 1);
+    std::string::size_type left, right;
+    left = std::find_if_not(s.begin(), s.end(), isspace) - s.begin();
+    if (left == s.length()) // String consists of space characters only
+        return "";
+    right = std::find_if_not(s.rbegin(), s.rend(), isspace) - s.rbegin();
+    return s.substr(left, s.length() - left - right);
 }
 
 
@@ -66,7 +56,7 @@ bool encodedCharAdjustCounter(const bool isutf8, const std::string & str, uint32
 
     if (i >= str.length())
         return rv;
-        
+
     if ( isutf8 ) {
         uint8_t c0,c1,c2,c3;
         c = str[i];
@@ -88,7 +78,7 @@ bool encodedCharAdjustCounter(const bool isutf8, const std::string & str, uint32
                 //syslog(LOG_INFO, "GraphLCD: illegal 2-byte UTF-8 sequence found: %02x %02x, pos=%d, str: %s\n", c0,c1,i,str.c_str());
                 c = errChar;
             }
-            i += 1;            
+            i += 1;
         } else if ( (c0 & 0xF0) == 0xE0 ) {
             // three byte utf8: 1110zzzz 10yyyyyy 10xxxxxx -> zzzzyyyy yyxxxxxx
             if ( ((c1 & 0xC0) == 0x80) && ((c2 & 0xC0) == 0x80) ) {
