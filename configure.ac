@@ -52,7 +52,7 @@ if test "$plugins" = "yes"; then
   AC_DEFINE(ENABLE_PLUGINS, 1,
 	    [Define to enable linker plugins])
 fi
-AM_CONDITIONAL(PLUGINS, test "$plugins" = "yes") 
+AM_CONDITIONAL(PLUGINS, test "$plugins" = "yes")
 
 
 AC_ARG_ENABLE([freetype2],
@@ -94,10 +94,13 @@ AC_ARG_ENABLE([driver_vncserver],
  	[case "${enableval}" in yes | "") am_driver_vncserver=yes ;; no) am_driver_vncserver=no ;; *) am_driver_vncserver=yes ;; esac], [am_driver_vncserver=yes])
   if test "$am_driver_vncserver" = "yes"; then
     PKG_CHECK_MODULES([libvncserver], [libvncserver], [HAVE_LIBVNCSERVER=1])
+    PKG_CHECK_MODULES([libjpeg], [libjpeg], [])
+    PKG_CHECK_MODULES([libturbojpeg], [libturbojpeg], [])
+    PKG_CHECK_MODULES([zlib], [zlib], [])
     AS_IF([test "$HAVE_LIBVNCSERVER" = 1], [AC_SUBST(MY_VNCSERVER_CPPFLAGS,-DHAVE_VNCSERVER)])
   fi
   AM_CONDITIONAL([HAVE_DRIVER_VNCSERVER], test "$am_driver_vncserver" = "yes")
-	
+
 AC_ARG_ENABLE([driver-ax206dpf],
  	AS_HELP_STRING(--disable-driver-ax206dpf,disable driver ax206dpf),
  	[case "${enableval}" in yes | "") am_driver_ax206dpf=yes ;; no) am_driver_ax206dpf=no ;; *) am_driver_ax206dpf=no ;; esac], [am_driver_ax206dpf=no])

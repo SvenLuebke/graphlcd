@@ -28,7 +28,7 @@ AM_CXXFLAGS += @MY_VNCSERVER_CPPFLAGS@ @libvncserver_CFLAGS@
 endif
 
 libglcddrivers_la_LDFLAGS = -version-info @GLCDDRIVERS_MAJOR_VERSION@:@GLCDDRIVERS_MINOR_VERSION@:@GLCDDRIVERS_MICRO_VERSION@ \
-                            -lpthread @libftdi1_LIBS@ @libvncserver_LIBS@
+                            -lpthread @libftdi1_LIBS@ @libvncserver_LIBS@ @libjpeg_LIBS@ @libturbojpeg_LIBS@ @zlib_LIBS@
 
 
 pkgincludedir = ${includedir}/glcddrivers
