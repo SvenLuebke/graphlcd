@@ -168,13 +168,13 @@ static bool CheckSkinVersion(const std::string & version) {
   currv = strtof(verscstr, &ecptr);
   setlocale(LC_NUMERIC, curr_locale);
 
-  if ( (*ecptr != '\0') || (ecptr == NULL) /*|| (ecptr != verscstr)*/ || 
+  if ( (*ecptr != '\0') || (ecptr == NULL) /*|| (ecptr != verscstr)*/ ||
        ((int)(GLCDSKIN_SKIN_VERSION * 100.0) < (int)(currv * 100.0))
      )
   {
-   return false;            
+   return false;
   }
-  return true;  
+  return true;
 }
 
 
@@ -194,7 +194,7 @@ bool StartElem(const std::string & name, std::map<std::string,std::string> & att
             if (! CheckSkinVersion(skin->version) ) {
               errorDetail = "skin version '"+ skin->version +"' not supported.";
               syslog(LOG_ERR, "ERROR: graphlcd/skin: %s", errorDetail.c_str());
-              return false;            
+              return false;
             }
         }
         else
@@ -221,14 +221,14 @@ bool StartElem(const std::string & name, std::map<std::string,std::string> & att
             incxml.SetCDataCB(CharData);
             if (incxml.Parse() != 0) {
                 errorDetail = "error when parsing included xml file '"+strpath+"'"+ ( (subErrorDetail == "") ? "" : " ("+subErrorDetail+")");
-                syslog(LOG_ERR, "ERROR: graphlcd/skin: %s", errorDetail.c_str());                
+                syslog(LOG_ERR, "ERROR: graphlcd/skin: %s", errorDetail.c_str());
                 return false;
             }
-            includeDepth--;            
+            includeDepth--;
         } else {
             subErrorDetail = "max. include depth reached";
-            return false;            
-        }        
+            return false;
+        }
     }
     else if (name == "condblock")
     {
@@ -237,7 +237,7 @@ bool StartElem(const std::string & name, std::map<std::string,std::string> & att
           if (context[i] == "condblock") {
             errorDetail = "'condblock' must not be nested in another 'condblock'.";
             syslog(LOG_ERR, "ERROR: graphlcd/skin: %s", errorDetail.c_str());
-            return false;            
+            return false;
           }
           i--;
         }
@@ -530,7 +530,7 @@ cSkin * XmlParse(cSkinConfig & Config, const std::string & Name, const std::stri
         condblock_cond = "";
         includeDepth = 0;
         subErrorDetail = "";
-    }      
+    }
     cXML xml(fileName, skin->Config().CharSet());
     xml.SetNodeStartCB(StartElem);
     xml.SetNodeEndCB(EndElem);
@@ -561,6 +561,12 @@ cSkin * XmlParse(cSkinConfig & Config, const std::string & Name, const std::stri
     //fprintf(stderr, "<<<<< XmlParse, Config: %s, Name: %s\n", Config.GetDriver()->ConfigName().c_str(), Name.c_str());
     pthread_mutex_unlock(&parse_mutex);
     return result;
+}
+
+// provide old function for compatibility
+cSkin * XmlParse(cSkinConfig & Config, const std::string & name, const std::string & fileName)
+{ std::string errorString = "";
+  return XmlParse(Config, name, fileName, errorString);
 }
 
 } // end of namespace

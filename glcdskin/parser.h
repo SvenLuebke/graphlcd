@@ -27,12 +27,7 @@ class cSkin;
 class cSkinConfig;
 
 cSkin * XmlParse(cSkinConfig & Config, const std::string & name, const std::string & fileName, std::string & errorString);
-
-// provide old function for compatibility
-cSkin * XmlParse(cSkinConfig & Config, const std::string & name, const std::string & fileName)
-{ std::string errorString = "";
-  return XmlParse(Config, name, fileName, errorString);
-}
+cSkin * XmlParse(cSkinConfig & Config, const std::string & name, const std::string & fileName);
 
 } // end of namespace
 
