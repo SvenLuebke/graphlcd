@@ -190,7 +190,6 @@ unsigned char ReverseBits(unsigned char value)
     return BitReverseTable[value];
 }
 
-#if 0
 void clip(int & value, int min, int max)
 {
     if (value < min)
@@ -208,6 +207,5 @@ std::string trim(const std::string & s)
     right = std::find_if_not(s.rbegin(), s.rend(), isspace) - s.rbegin();
     return s.substr(left, s.length() - left - right);
 }
-#endif
 
 } // end of namespace

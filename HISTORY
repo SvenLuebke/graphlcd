@@ -1,6 +1,30 @@
 GraphLCD base package Revision History
 --------------------------------------
 
+2021-02-08: Version 2.0.3
+- Remove usage of FcFini() to prevent race conditions with other users of
+  fontconfig
+
+2021-01-07: Version 2.0.2
+- Remove non-standard "uint" file type which does not exist in some
+  environments. Thanks to Conrad Kostecki!
+- Fixed remaining compiler warnings
+
+2021-01-04: Version 2.0.1
+- Replace libvncserver-config with pkg-config to make vncserver driver work
+  with later libvncserver versions. Thanks to Conrad Kostecki!
+
+2020-08-14: Version 2.0.0
+- If a required font file is neither in "FontPath" nor in the "fonts"
+  subdirectory of "SkinPath", then (if available) fontconfig is used to search
+  all common system font paths for the wanted font file
+
+2018-11-10: Version 1.0.2
+- Improved "trim" function which doesn't cause negative size_type values
+
+2018-05-10: Version 1.0.1
+- Fixed building against freetype 2.9.1
+
 2018-04-08: Version 1.0.0
 - New driver "st7565r-reel"
 - New driver "usbserlcd". With this driver it is possible to diy an USB LCD.
