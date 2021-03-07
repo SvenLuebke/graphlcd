@@ -38,7 +38,7 @@ typedef enum
 
 #define IODRV_WriteByte(a, b, c)       {uint8_t *buffer = IODRV_GetDataBuffer(); buffer[0] = c; IODRV_Write(a, b, 1);}
 
-IODRVrc_t   IODRV_Init(uint8_t channelId, IODRVhandle_t *io_handle);
+IODRVrc_t   IODRV_Init(uint8_t channelId, uint32_t frequency, IODRVhandle_t *io_handle);
 uint8_t*    IODRV_GetDataBuffer(void);
 void        IODRV_WriteCommand(uint8_t command);
 void        IODRV_WriteData(uint8_t data);

@@ -6,17 +6,17 @@
  * This file is released under the GNU General Public License. Refer
  * to the COPYING file distributed with this package.
  *
- * (c) 2020 Sven Lübke <sven.luebke AT mikrosol.de>
+ * (c) 2020 Sven Luebke <sven.luebke AT mikrosol.de>
  */
 
 #include <stdint.h>
-//#include <syslog.h>
+#include "syslog.h"
 #include <unistd.h>
 #include <cstring>
 
 #include <ftdi.h>
 
-//#include "common.h"
+
 #include "config.h"
 
 #include "ssd1322ftdi.h"
@@ -27,6 +27,8 @@ namespace GLCD
 
 const int kLcdWidth  = 256;
 const int kLcdHeight = 64;
+const uint8_t  kFTDIChannel = 1;
+const uint32_t kSPIFrequency = 1500000;
 
 // Display commands
 const uint8_t kSSD1322CmdSetColumnAddress =                 0x15;
@@ -65,8 +67,6 @@ cDriverSSD1322::cDriverSSD1322(cDriverConfig * config)
 :   cDriver(config)
 {
   refreshCounter = 0;
-  if (EXIT_SUCCESS == IODRV_Init(0, &io_handle))
-  {}
 }
 
 cDriverSSD1322::~cDriverSSD1322()
@@ -76,22 +76,40 @@ cDriverSSD1322::~cDriverSSD1322()
 
 int cDriverSSD1322::Init()
 {
+  uint8_t  channel = kFTDIChannel;
+  uint32_t freq = kSPIFrequency;
+
   width = config->width;
   if (width <= 0)
     width = kLcdWidth;
   height = config->height;
   if (height <= 0)
     height = kLcdHeight;
-  fprintf(stdout, "Configured with %d x %d\n", width, height);
+  syslog(LOG_INFO, "Configured with %d x %d\n", width, height);
 
   this->gfxMemBytesOneRow = width / 2;
   this->bufferSize = this->gfxMemBytesOneRow * height;
 
   for (unsigned int i = 0; i < config->options.size(); i++)
   {
-    if (config->options[i].name == "")
+    if (config->options[i].name == "SPIFrequency")
     {
+      freq = atoi(config->options[i].value.c_str());
     }
+    else if (config->options[i].name == "Channel")
+    {
+      channel = atoi(config->options[i].value.c_str());
+    }
+  }
+
+  if (EXIT_SUCCESS != IODRV_Init(channel, freq, &io_handle))
+  {
+    return -1;
+  }
+
+  if (config->device == "")
+  {
+      return -1;
   }
 
   // setup lcd array (wanted state)
@@ -100,17 +118,11 @@ int cDriverSSD1322::Init()
   {
     memset(&(this->newLCD[0]), 0, bufferSize);
   }
-
   // setup lcd array (current state)
   this->oldLCD = new unsigned char[bufferSize];
   if (this->oldLCD)
   {
     memset(&this->oldLCD[0], 0, bufferSize);
-  }
-
-  if (config->device == "")
-  {
-      return -1;
   }
 
   WriteCommand(kSSD1322CmdSetCommandLock, 0x12);
@@ -139,9 +151,8 @@ int cDriverSSD1322::Init()
   WriteCommand(kSSD1322CmdSleepModeOff);                       /* Sleep mode OFF */
   IODRV_TriggerXfer(io_handle);
 
-
   *oldConfig = *config;
-  //syslog(LOG_INFO, "%s: SSD1322 initialized.\n", config->name.c_str());
+  syslog(LOG_INFO, "%s: SSD1322 initialized.\n", config->name.c_str());
   return 0;
 }
 
@@ -164,7 +175,7 @@ int cDriverSSD1322::DeInit()
 int cDriverSSD1322::CheckSetup()
 {
   if (config->device != oldConfig->device ||
-      config->width != oldConfig->width ||
+      config->width  != oldConfig->width  ||
       config->height != oldConfig->height)
   {
     DeInit();
@@ -200,7 +211,7 @@ void cDriverSSD1322::SetPixel(int x, int y, uint32_t data)
   }
 
   int y_offset = (y * this->gfxMemBytesOneRow);
-  uint32_t ssd_data = x % 2 ? 0x0F : 0xF0;
+  uint8_t ssd_data = x % 2 ? 0x0F : 0xF0;
   if (data == GRAPHLCD_White)
     newLCD[y_offset + x/2] |= ssd_data;
   else

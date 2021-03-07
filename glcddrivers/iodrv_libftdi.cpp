@@ -21,7 +21,7 @@ void IODRV_SPIStartSequence(uint8_t pinStart);
 void IODRV_SPIEndSequence(void);
 
 
-IODRVrc_t IODRV_Init(uint8_t channelId, IODRVhandle_t *io_handle)
+IODRVrc_t IODRV_Init(uint8_t channelId, uint32_t frequency, IODRVhandle_t *io_handle)
 {
   ftdi_status_t ftdi_status;
   ftdi_handle_t ftdi_handle;
@@ -43,11 +43,11 @@ IODRVrc_t IODRV_Init(uint8_t channelId, IODRVhandle_t *io_handle)
   }
   ftdi_usb_reset(ftdi_handle);
   IODRV_ShowInfo(io_handle);
-  ftdi_set_interface(ftdi_handle, INTERFACE_A);
+  ftdi_set_interface(ftdi_handle, (ftdi_interface) channelId);
   ftdi_set_bitmode(ftdi_handle, 0, 0); // reset
   ftdi_set_bitmode(ftdi_handle, 0, BITMODE_MPSSE); // enable mpsse on all bits
   usleep(50000); // sleep 50 ms for setup to complete
-  mpsse_set_clock(&buffer0[buffer0FillIndex], 15000000, &buffer0FillIndex);
+  mpsse_set_clock(&buffer0[buffer0FillIndex], frequency, &buffer0FillIndex);
   mpsse_set_protocolParams(&buffer0[buffer0FillIndex],
                            (FTDI_PIN_SCK | FTDI_PIN_MOSI | FTDI_PIN_CS | FTDI_PIN_CD | FTDI_PIN_UNUSED),
                            (FTDI_PIN_SCK | FTDI_PIN_MOSI | FTDI_PIN_CS | FTDI_PIN_CD), &buffer0FillIndex);
@@ -142,7 +142,7 @@ IODRVrc_t IODRV_TriggerXfer(IODRVhandle_t io_handle)
   }
   else
   {
-    printf("Bytes written were not the same: %d\n", bytesWritten);
+    fprintf(stdout, "Bytes written were not the same: %d\n", bytesWritten);
     retVal = EXIT_FAILURE;
   }
   buffer0FillIndex = 0;
