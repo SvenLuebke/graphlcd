@@ -50,6 +50,10 @@
 #ifdef HAVE_DRIVER_ILI9341
 #include "ili9341.h"
 #endif
+#ifdef HAVE_DRIVER_SSD1322FTDI
+#include "ssd1322ftdi.h"
+#endif
+
 
 namespace GLCD
 {
@@ -94,6 +98,10 @@ tDriver drivers[] =
 #ifdef HAVE_DRIVER_ILI9341
     {"ili9341",       kDriverILI9341},
 #endif
+#ifdef HAVE_DRIVER_SSD1322FTDI
+    {"ssd1322ftdi",   kDriverSSD1322FTDI},
+#endif
+
     {"",              kDriverUnknown}
 };
 
@@ -179,6 +187,10 @@ cDriver * CreateDriver(int driverID, cDriverConfig * config)
 #ifdef HAVE_DRIVER_ILI9341
         case kDriverILI9341:
             return new cDriverILI9341(config);
+#endif
+#ifdef HAVE_DRIVER_SSD1322FTDI
+        case kDriverSSD1322FTDI:
+            return new cDriverSSD1322(config);
 #endif
         case kDriverUnknown:
         default:

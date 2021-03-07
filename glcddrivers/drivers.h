@@ -58,6 +58,9 @@ enum eDriver
 #endif
     kDriverUSBserLCD     = 23,
     kDriverST7565RReel   = 24,
+#ifdef HAVE_DRIVER_SSD1322FTDI
+    kDriverSSD1322FTDI   = 30,
+#endif
     kDriverSerDisp       = 100,
     kDriverG15daemon     = 200
 };
