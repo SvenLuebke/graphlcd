@@ -29,6 +29,7 @@ const int kLcdWidth  = 256;
 const int kLcdHeight = 64;
 const uint8_t  kFTDIChannel = 1;
 const uint32_t kSPIFrequency = 1500000;
+const uint32_t kLcdDefaultColor = 0x0A;
 
 // Display commands
 const uint8_t kSSD1322CmdSetColumnAddress =                 0x15;
@@ -78,7 +79,8 @@ int cDriverSSD1322::Init()
 {
   uint8_t  channel = kFTDIChannel;
   uint32_t freq = kSPIFrequency;
-
+  color = kLcdDefaultColor;
+  
   width = config->width;
   if (width <= 0)
     width = kLcdWidth;
@@ -99,6 +101,14 @@ int cDriverSSD1322::Init()
     else if (config->options[i].name == "Channel")
     {
       channel = atoi(config->options[i].value.c_str());
+    }
+    else if (config->options[i].name == "Color")
+    {
+      color = atoi(config->options[i].value.c_str());
+      if (color > 0x0F)
+      {
+        color = kLcdDefaultColor;
+      }
     }
   }
 
@@ -139,12 +149,12 @@ int cDriverSSD1322::Init()
   WriteCommand(kSSD1322CmdSetContrastCurrent, 0x9F);           /* Set Contrast Current */
   WriteCommand(kSSD1322CmdMasterContrastCurrentControl, 0x0F); /* Master Contrast Current Control */
   WriteCommand(kSSD1322CmdSelectDefaultLinearGrayScaleable);   /* Select Default Linear Gray Scale table */
-  //WriteCommand(kSSD1322CmdEnableGreyScale);                  /* Enable Gray Scale table */
+  WriteCommand(kSSD1322CmdEnableGreyScale);                    /* Enable Gray Scale table */
   WriteCommand(kSSD1322CmdSetPhaseLength, 0xE2);               /* Set Phase Length */
   WriteCommand(kSSD1322CmdDisplayEnhancementB, 0x82, 0x20);    /* Display Enhancement  B */ /* User is recommended to set A[5:4] to 00b */ /* Default */
   WriteCommand(kSSD1322CmdSetPrechargeVoltage, 0x1F);          /* Set Pre-charge voltage */
   WriteCommand(kSSD1322CmdSetSecondPrechargePeriod, 0x08);     /* Set Second Precharge Period */
-  WriteCommand(kSSD1322CmdSetVcomH, 0x07);                     /* Set VCOMH */
+  WriteCommand(kSSD1322CmdSetVcomH, 0x04);                     /* Set VCOMH */
   WriteCommand(kSSD1322CmdSetNormalDisplay);                   /* Normal Display */
   // clear display
   Clear();
@@ -211,11 +221,11 @@ void cDriverSSD1322::SetPixel(int x, int y, uint32_t data)
   }
 
   int y_offset = (y * this->gfxMemBytesOneRow);
-  uint8_t ssd_data = x % 2 ? 0x0F : 0xF0;
+  uint8_t ssd_data = x % 2 ? color : (color << 4);
   if (data == GRAPHLCD_White)
     newLCD[y_offset + x/2] |= ssd_data;
   else
-    newLCD[y_offset + x / 2] &= ssd_data;
+    newLCD[y_offset + x/2] &= ~ssd_data;
 }
 
 
@@ -283,7 +293,8 @@ void cDriverSSD1322::Refresh(bool refreshAll)
 
 void cDriverSSD1322::SetBrightness(unsigned int percent)
 {
-  //WriteCommand(kCmdSetContrast, percent * 255 / 100);
+  WriteCommand(kSSD1322CmdSetContrastCurrent, percent * 255 / 100);
+  IODRV_TriggerXfer(io_handle);
 }
 
 void cDriverSSD1322::Reset()
