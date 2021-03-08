@@ -32,6 +32,7 @@ private:
   uint32_t bufferSize;
   uint32_t gfxMemBytesOneRow;
 
+  uint8_t color;
   int refreshCounter;
 
   int CheckSetup();
